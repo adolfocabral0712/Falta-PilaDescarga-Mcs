@@ -324,17 +324,19 @@
       const aviso = document.getElementById("aviso");
       const texto = document.getElementById("avisoTexto");
       if (origenDemo) {
+        aviso.classList.remove("hidden");
         aviso.className = "notice error";
         texto.textContent = "Vista de ejemplo: no se encontró el JSON junto al index.html.";
-      } else if (!datos.controlMetrosCubicosActivo) {
-        aviso.className = "notice";
-        texto.textContent = `El control de MCS se habilita a las ${datos.horaControlMetrosCubicos || "22:00"}. Antes de esa hora solo se controla primero de pila.`;
-      } else if ((datos.cantidadRegistros ?? 0) === 0) {
+      } else if ((datos.cantidadRegistros ?? 0) > 0) {
+        aviso.classList.remove("hidden");
+        aviso.className = "notice error";
+        texto.textContent = `Hay ${datos.cantidadRegistros} ${datos.cantidadRegistros === 1 ? "registro pendiente" : "registros pendientes"} para revisar.`;
+      } else if (datos.controlMetrosCubicosActivo) {
+        aviso.classList.remove("hidden");
         aviso.className = "notice ok";
         texto.textContent = "Control completo: no hay faltantes para el día de hoy.";
       } else {
-        aviso.className = "notice error";
-        texto.textContent = `Hay ${datos.cantidadRegistros} ${datos.cantidadRegistros === 1 ? "registro pendiente" : "registros pendientes"} para revisar.`;
+        aviso.classList.add("hidden");
       }
       renderTabla();
     }
