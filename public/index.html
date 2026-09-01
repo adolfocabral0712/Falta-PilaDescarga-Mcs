@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f2741">
+  <title>Control Pila y MCS</title>
+  <style>
+    :root {
+      --navy: #0f2741;
+      --blue: #174b78;
+      --cyan: #0f91a8;
+      --green: #12805c;
+      --red: #c53a45;
+      --amber: #c77b12;
+      --paper: #ffffff;
+      --bg: #eef3f7;
+      --ink: #182838;
+      --muted: #66788a;
+      --line: #d9e3eb;
+      --shadow: 0 10px 30px rgba(15, 39, 65, .10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: linear-gradient(145deg, #e8f0f5 0%, #f7f9fb 55%, #e7eff4 100%);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+    }
+
+    header {
+      color: #fff;
+      background: linear-gradient(120deg, var(--navy), var(--blue));
+      box-shadow: 0 5px 20px rgba(15, 39, 65, .24);
+    }
+
+    .header-inner, main {
+      width: min(1200px, calc(100% - 32px));
+      margin: auto;
+    }
+
+    .header-inner {
+      min-height: 118px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #96d9e5;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(25px, 4vw, 38px);
+      line-height: 1.05;
+    }
+
+    .updated {
+      min-width: 220px;
+      padding: 12px 16px;
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 12px;
+      background: rgba(255,255,255,.09);
+      text-align: right;
+    }
+
+    .updated span { display: block; font-size: 12px; color: #bed6e7; }
+    .updated strong { display: block; margin-top: 3px; font-size: 15px; }
+
+    main { padding: 26px 0 45px; }
+
+    .notice {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 14px 17px;
+      border-radius: 12px;
+      border: 1px solid #f0d49b;
+      background: #fff8e8;
+      color: #735016;
+      box-shadow: var(--shadow);
+    }
+
+    .notice.ok { border-color: #b9dfd0; background: #edf9f4; color: #176347; }
+    .notice.error { border-color: #f1b8be; background: #fff0f1; color: #8f2731; }
+    .notice-dot { width: 11px; height: 11px; flex: 0 0 auto; border-radius: 50%; background: currentColor; }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      min-height: 137px;
+      padding: 20px;
+      text-align: center;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .card:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(15,39,65,.14); }
+    .card.active { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(23,75,120,.13), var(--shadow); }
+    .card::after { content: ""; position: absolute; inset: auto -25px -40px auto; width: 105px; height: 105px; border-radius: 50%; background: currentColor; opacity: .07; }
+    .card.total { color: var(--blue); }
+    .card.pila { color: var(--amber); }
+    .card.mcs { color: var(--red); }
+    .card.ambos { color: #8b3fa3; }
+    .card-label { color: var(--muted); font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .card-value { margin-top: 10px; font-size: 39px; line-height: 1; font-weight: 800; color: currentColor; }
+    .card-help { margin-top: 9px; font-size: 12px; color: var(--muted); }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-head h2 { margin: 0; font-size: 15px; }
+    .count-label { font-size: 11px; color: var(--muted); }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 820px; }
+    th, td { padding: 6px 7px; border-bottom: 1px solid #e7edf2; text-align: center; vertical-align: middle; line-height: 1.15; }
+    th { background: #f4f7fa; color: #536678; font-size: 9px; letter-spacing: .035em; text-transform: uppercase; white-space: nowrap; }
+    td { font-size: 11px; }
+    tbody tr:hover { background: #f7fafc; }
+    .badge { display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; border-radius: 999px; font-size: 9px; font-weight: 800; white-space: nowrap; }
+    .badge.pila { color: #80500e; background: #fff0ce; }
+    .badge.mcs { color: #922b35; background: #ffe2e5; }
+    .badge.ambos { color: #713183; background: #f3def8; }
+    .empty { padding: 24px 14px; text-align: center; color: var(--muted); font-size: 12px; }
+    .empty strong { display: block; margin-bottom: 4px; color: var(--green); font-size: 15px; }
+    .hidden { display: none !important; }
+
+    @media (max-width: 850px) {
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .header-inner { min-height: 132px; align-items: flex-start; flex-direction: column; justify-content: center; gap: 12px; }
+      .updated { min-width: 0; width: 100%; text-align: left; }
+    }
+
+    @media (max-width: 520px) {
+      .header-inner, main { width: min(100% - 20px, 1200px); }
+      main { padding-top: 16px; }
+      .cards { gap: 10px; }
+      .card { min-height: 124px; padding: 16px 13px; }
+      .card-value { font-size: 34px; }
+      .card-help { font-size: 11px; }
+      .panel-head { align-items: flex-start; flex-direction: column; }
+      .notice { align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div>
+        <p class="eyebrow">Control operativo · FRIMOSA</p>
+        <h1>Falta Pila / Descarga MCS</h1>
+      </div>
+      <div class="updated">
+        <span>Última actualización</span>
+        <strong id="actualizado">Cargando…</strong>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="aviso" class="notice">
+      <span class="notice-dot"></span>
+      <span id="avisoTexto">Consultando información…</span>
+    </div>
+
+    <section class="cards" aria-label="Resumen de pendientes">
+      <article class="card pila" data-filter="FALTA PRIMERO DE PILA" tabindex="0">
+        <div class="card-label">Falta pila</div>
+        <div class="card-value" id="faltaPila">0</div>
+        <div class="card-help">Incluye faltantes de ambos</div>
+      </article>
+      <article class="card mcs" data-filter="FALTAN METROS CÚBICOS" tabindex="0">
+        <div class="card-label">Falta MCS</div>
+        <div class="card-value" id="faltaMcs">0</div>
+        <div class="card-help">Control activo desde las 22:00</div>
+      </article>
+      <article class="card ambos" data-filter="FALTA PILA Y METROS CÚBICOS" tabindex="0">
+        <div class="card-label">Faltan ambos</div>
+        <div class="card-value" id="faltanAmbos">0</div>
+        <div class="card-help">Pila y metros cúbicos</div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 id="tituloTabla">Registros pendientes</h2>
+        <div class="count-label" id="cantidadVisible">0 registros</div>
+      </div>
+      <div class="table-wrap" id="tablaContenedor">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th><th>Matrícula</th><th>Remito</th><th>Predio</th>
+              <th>Producto</th><th>Primero de pila</th><th>MCS</th><th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="tablaBody"></tbody>
+        </table>
+      </div>
+      <div id="sinDatos" class="empty hidden">
+        <strong>Sin pendientes</strong>
+        No hay registros para el filtro seleccionado.
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const JSON_URL = "/api/datos";
+    let datos = null;
+    let filtroActivo = "TODOS";
+
+    const muestra = {
+      actualizado: "2026-08-31T23:19:46-03:00", fechaControl: "2026-08-31",
+      horaControlMetrosCubicos: "22:00", controlMetrosCubicosActivo: true,
+      cantidadRegistros: 1, faltaPrimeroDePila: 0, faltaMetrosCubicos: 1,
+      faltanAmbos: 0, totalConFaltaPila: 0, totalConFaltaMetrosCubicos: 1,
+      registros: [{ id: 39153790, fecha: "2026-08-31 00:00:00", matricula: "NTP5566",
+        remito: "247900", predio: "Nuñez 2026", producto: "Globulus 7,20",
+        pila_origen: "103", neto: "31.64", primerodepila: "C21",
+        metros_cubicos: null, estado: "FALTAN METROS CÚBICOS" }]
+    };
+
+    function escapar(valor) {
+      return String(valor ?? "—").replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+    }
+
+    function fechaHora(valor) {
+      if (!valor) return "—";
+      const limpio = String(valor).replace(" ", "T");
+      const fecha = new Date(limpio);
+      if (Number.isNaN(fecha.getTime())) return escapar(valor);
+      return fecha.toLocaleDateString("es-UY", {day:"2-digit", month:"2-digit", year:"numeric"});
+    }
+
+    function fechaHoraCompleta(valor) {
+      if (!valor) return "Sin fecha";
+      const fecha = new Date(valor);
+      if (Number.isNaN(fecha.getTime())) return escapar(valor);
+      const parteFecha = fecha.toLocaleDateString("es-UY", {
+        day: "2-digit", month: "2-digit", year: "numeric"
+      });
+      const parteHora = fecha.toLocaleTimeString("es-UY", {
+        hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+      });
+      return `${parteFecha} ${parteHora}`;
+    }
+
+    function claseEstado(estado) {
+      if (estado === "FALTA PRIMERO DE PILA") return "pila";
+      if (estado === "FALTAN METROS CÚBICOS") return "mcs";
+      return "ambos";
+    }
+
+    function registrosFiltrados() {
+      const lista = Array.isArray(datos?.registros) ? datos.registros : [];
+      if (filtroActivo === "TODOS") return lista;
+      if (filtroActivo === "FALTA PRIMERO DE PILA") {
+        return lista.filter(r => r.estado === filtroActivo || r.estado === "FALTA PILA Y METROS CÚBICOS");
+      }
+      if (filtroActivo === "FALTAN METROS CÚBICOS") {
+        return lista.filter(r => r.estado === filtroActivo || r.estado === "FALTA PILA Y METROS CÚBICOS");
+      }
+      return lista.filter(r => r.estado === filtroActivo);
+    }
+
+    function renderTabla() {
+      const lista = registrosFiltrados();
+      const body = document.getElementById("tablaBody");
+      document.getElementById("cantidadVisible").textContent = `${lista.length} ${lista.length === 1 ? "registro" : "registros"}`;
+      document.getElementById("tituloTabla").textContent = filtroActivo === "TODOS" ? "Registros pendientes" : filtroActivo;
+      document.getElementById("tablaContenedor").classList.toggle("hidden", lista.length === 0);
+      document.getElementById("sinDatos").classList.toggle("hidden", lista.length !== 0);
+      body.innerHTML = lista.map(r => `
+        <tr>
+          <td>${fechaHora(r.fecha)}</td><td><strong>${escapar(r.matricula)}</strong></td>
+          <td>${escapar(r.remito)}</td><td>${escapar(r.predio)}</td><td>${escapar(r.producto)}</td>
+          <td>${escapar(r.primerodepila)}</td><td>${escapar(r.metros_cubicos)}</td>
+          <td><span class="badge ${claseEstado(r.estado)}">${escapar(r.estado)}</span></td>
+        </tr>`).join("");
+    }
+
+    function render(origenDemo = false) {
+      document.getElementById("actualizado").textContent = fechaHoraCompleta(datos.actualizado);
+      document.getElementById("faltaPila").textContent = datos.totalConFaltaPila ?? 0;
+      document.getElementById("faltaMcs").textContent = datos.totalConFaltaMetrosCubicos ?? 0;
+      document.getElementById("faltanAmbos").textContent = datos.faltanAmbos ?? 0;
+
+      const aviso = document.getElementById("aviso");
+      const texto = document.getElementById("avisoTexto");
+      if (origenDemo) {
+        aviso.className = "notice error";
+        texto.textContent = "Vista de ejemplo: no se encontró el JSON junto al index.html.";
+      } else if (!datos.controlMetrosCubicosActivo) {
+        aviso.className = "notice";
+        texto.textContent = `El control de MCS se habilita a las ${datos.horaControlMetrosCubicos || "22:00"}. Antes de esa hora solo se controla primero de pila.`;
+      } else if ((datos.cantidadRegistros ?? 0) === 0) {
+        aviso.className = "notice ok";
+        texto.textContent = "Control completo: no hay faltantes para el día de hoy.";
+      } else {
+        aviso.className = "notice error";
+        texto.textContent = `Hay ${datos.cantidadRegistros} ${datos.cantidadRegistros === 1 ? "registro pendiente" : "registros pendientes"} para revisar.`;
+      }
+      renderTabla();
+    }
+
+    document.querySelectorAll(".card").forEach(card => {
+      const activar = () => {
+        const yaActiva = card.classList.contains("active");
+        document.querySelectorAll(".card").forEach(c => c.classList.remove("active"));
+        if (yaActiva) {
+          filtroActivo = "TODOS";
+        } else {
+          card.classList.add("active");
+          filtroActivo = card.dataset.filter;
+        }
+        renderTabla();
+      };
+      card.addEventListener("click", activar);
+      card.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") activar(); });
+    });
+
+    const separadorCache = JSON_URL.includes("?") ? "&" : "?";
+
+    fetch(`${JSON_URL}${separadorCache}t=${Date.now()}`, {cache: "no-store"})
+      .then(respuesta => { if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`); return respuesta.json(); })
+      .then(json => { datos = json; render(false); })
+      .catch(() => { datos = muestra; render(true); });
+  </script>
+</body>
+</html>
