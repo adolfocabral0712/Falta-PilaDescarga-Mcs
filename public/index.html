@@ -3,22 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0f2741">
+  <meta name="theme-color" content="#C65312">
   <title>Control Pila y MCS</title>
   <style>
     :root {
-      --navy: #0f2741;
-      --blue: #174b78;
-      --cyan: #0f91a8;
-      --green: #12805c;
-      --red: #c53a45;
-      --amber: #c77b12;
-      --paper: #ffffff;
-      --bg: #eef3f7;
-      --ink: #182838;
-      --muted: #66788a;
-      --line: #d9e3eb;
-      --shadow: 0 10px 30px rgba(15, 39, 65, .10);
+      --fas-orange: #C65312;
+      --fas-orange-hover: #E86F18;
+      --fas-orange-light: #FFB86B;
+      --fas-charcoal: #1F1F1F;
+      --fas-warm-gray: #F4F3F1;
+      --fas-gray: #6B6B6B;
+      --fas-white: #FFFFFF;
+      --green: #287547;
+      --red: #B4232F;
+      --amber: #A84A12;
+      --paper: var(--fas-white);
+      --bg: var(--fas-warm-gray);
+      --ink: var(--fas-charcoal);
+      --muted: var(--fas-gray);
+      --line: #DEDAD5;
+      --shadow: 0 10px 30px rgba(31, 31, 31, .09);
     }
 
     * { box-sizing: border-box; }
@@ -27,14 +31,14 @@
       margin: 0;
       min-height: 100vh;
       color: var(--ink);
-      background: linear-gradient(145deg, #e8f0f5 0%, #f7f9fb 55%, #e7eff4 100%);
+      background: linear-gradient(145deg, #F4F3F1 0%, #FFFFFF 55%, #EEECE9 100%);
       font-family: Inter, "Segoe UI", Arial, sans-serif;
     }
 
     header {
       color: #fff;
-      background: linear-gradient(120deg, var(--navy), var(--blue));
-      box-shadow: 0 5px 20px rgba(15, 39, 65, .24);
+      background: linear-gradient(120deg, var(--fas-orange), var(--fas-orange-hover));
+      box-shadow: 0 5px 20px rgba(198, 83, 18, .22);
     }
 
     .header-inner, main {
@@ -56,7 +60,7 @@
       font-weight: 800;
       letter-spacing: .14em;
       text-transform: uppercase;
-      color: #96d9e5;
+      color: #FFE0C2;
     }
 
     h1 {
@@ -74,7 +78,7 @@
       text-align: right;
     }
 
-    .updated span { display: block; font-size: 12px; color: #bed6e7; }
+    .updated span { display: block; font-size: 12px; color: rgba(255,255,255,.82); }
     .updated strong { display: block; margin-top: 3px; font-size: 15px; }
 
     main { padding: 26px 0 45px; }
@@ -86,14 +90,14 @@
       margin-bottom: 20px;
       padding: 14px 17px;
       border-radius: 12px;
-      border: 1px solid #f0d49b;
-      background: #fff8e8;
-      color: #735016;
+      border: 1px solid #F2C69E;
+      background: #FFF5EB;
+      color: #8F3D0E;
       box-shadow: var(--shadow);
     }
 
-    .notice.ok { border-color: #b9dfd0; background: #edf9f4; color: #176347; }
-    .notice.error { border-color: #f1b8be; background: #fff0f1; color: #8f2731; }
+    .notice.ok { border-color: #B9D9C2; background: #EFF7F0; color: #24643A; }
+    .notice.error { border-color: #E8B8B5; background: #FFF1EF; color: #9D3029; }
     .notice-dot { width: 11px; height: 11px; flex: 0 0 auto; border-radius: 50%; background: currentColor; }
 
     .cards {
@@ -117,13 +121,13 @@
       transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
     }
 
-    .card:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(15,39,65,.14); }
-    .card.active { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(23,75,120,.13), var(--shadow); }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(31,31,31,.13); }
+    .card.active { border-color: var(--fas-orange); box-shadow: 0 0 0 2px rgba(198,83,18,.16), var(--shadow); }
     .card::after { content: ""; position: absolute; inset: auto -25px -40px auto; width: 105px; height: 105px; border-radius: 50%; background: currentColor; opacity: .07; }
-    .card.total { color: var(--blue); }
-    .card.pila { color: var(--amber); }
-    .card.mcs { color: var(--red); }
-    .card.ambos { color: #8b3fa3; }
+    .card.total { color: var(--fas-orange); }
+    .card.pila { color: #A84A12; }
+    .card.mcs { color: var(--fas-orange-hover); }
+    .card.ambos { color: var(--fas-charcoal); }
     .card-label { color: var(--muted); font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
     .card-value { margin-top: 10px; font-size: 39px; line-height: 1; font-weight: 800; color: currentColor; }
     .card-help { margin-top: 9px; font-size: 12px; color: var(--muted); }
@@ -149,16 +153,16 @@
     .count-label { font-size: 11px; color: var(--muted); }
     .table-wrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; min-width: 820px; }
-    th, td { padding: 6px 7px; border-bottom: 1px solid #e7edf2; text-align: center; vertical-align: middle; line-height: 1.15; }
-    th { background: #f4f7fa; color: #536678; font-size: 9px; letter-spacing: .035em; text-transform: uppercase; white-space: nowrap; }
+    th, td { padding: 6px 7px; border-bottom: 1px solid #E7E3DE; text-align: center; vertical-align: middle; line-height: 1.15; }
+    th { background: #F4F3F1; color: #55514D; font-size: 9px; letter-spacing: .035em; text-transform: uppercase; white-space: nowrap; }
     td { font-size: 11px; }
-    tbody tr:hover { background: #f7fafc; }
+    tbody tr:hover { background: #FFF7F0; }
     .badge { display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; border-radius: 999px; font-size: 9px; font-weight: 800; white-space: nowrap; }
-    .badge.pila { color: #80500e; background: #fff0ce; }
-    .badge.mcs { color: #922b35; background: #ffe2e5; }
-    .badge.ambos { color: #713183; background: #f3def8; }
+    .badge.pila { color: #8F3D0E; background: #FFE8D2; }
+    .badge.mcs { color: #A84A12; background: #FFF0E3; }
+    .badge.ambos { color: #FFFFFF; background: #1F1F1F; }
     .empty { padding: 24px 14px; text-align: center; color: var(--muted); font-size: 12px; }
-    .empty strong { display: block; margin-bottom: 4px; color: var(--green); font-size: 15px; }
+    .empty strong { display: block; margin-bottom: 4px; color: var(--fas-orange); font-size: 15px; }
     .hidden { display: none !important; }
 
     @media (max-width: 850px) {
